@@ -16,20 +16,28 @@ class MyClient(discord.Client):
     async def check_server(self):
         await self.wait_until_ready()
         online = False
+        players = 0
         try:
             server = MinecraftServer.lookup(MC_SERVER_ADDRESS)
             server_status = server.status()
+            players = server_status.players.online
             online = True
         except:
             pass
 
         await self.update_server_presence(online)
+        await self.update_players(online, players)
     
     async def update_server_presence(self, online):
         status = (discord.Status.dnd, discord.Status.online)[online]
         emoji = ('\U000026D4', '\U00002705')[online]
         activity = discord.Game(name='Minecraft Server ' + emoji)
         await self.change_presence(status=status, activity=discord.Game(name=activity))
+
+    async def update_players(self, online, players):
+        nick = str(players or "No") + " Players"
+        for server in self.guilds:
+            await server.me.edit(nick=nick)
 
 client = MyClient()
 
